@@ -56,7 +56,8 @@ def get_main_inline_keyboard():
              InlineKeyboardButton(text="Ссылка на разраба", url="https://guns.lol/marlonhd"),
              InlineKeyboardButton(text="Стафф онлайн", callback_data='staff_online')
             ]
-        ]
+        ],
+        resize_keyboard=True
     )
     return keyboard
 
@@ -64,13 +65,24 @@ def back_to_main_keyboard():
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="Назад", callback_data='backToMain')]
-        ]
+        ],
+        resize_keyboard=True
     )
     return keyboard
 
-@router.callback_query(lambda c: c.data == "more_info")
-async def process_more_info(callback: CallbackQuery):
-    await callback.message.answer("Here is more information about the bot!", reply_markup=back_to_main_keyboard())
+def follow_player():
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard = [
+            [InlineKeyboardButton(text="Следить за игроком", callback_data='follow_player'), InlineKeyboardButton(text="Поиск другого игрока", callback_data='search_player')],
+            [InlineKeyboardButton(text="Назад", callback_data='backToMain')]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+@router.callback_query(lambda c: c.data == "follow_player")
+async def process_follow_player(callback: CallbackQuery):
+    await callback.message.answer("РАЗРАБАТЫВАЕТСЯ", reply_markup=back_to_main_keyboard())
     await callback.answer()
 
 @router.callback_query(lambda c: c.data == "backToMain")
@@ -183,7 +195,7 @@ async def process_player_nickname(message: Message, state: FSMContext):
             except (IndexError, KeyError):
                 player_info += f"\n☠️ Статус: Неизвестен"
 
-            await message.answer(player_info, reply_markup=back_to_main_keyboard())
+            await message.answer(player_info, reply_markup=follow_player())
         except (IndexError, KeyError, ):
             await message.answer("Нет информации об этом игроке." , reply_markup=back_to_main_keyboard())
     else:
@@ -193,7 +205,8 @@ async def process_player_nickname(message: Message, state: FSMContext):
 @router.message(Command("start"))
 @router.message(F.text.lower() == "start")
 async def start(message: Message):
-    await message.answer(f"Привет, {message.from_user.first_name}, чем могу помочь?", reply_markup=get_main_inline_keyboard())
+    user_first_name = str(message.chat.first_name)
+    await message.answer(f"Привет, {user_first_name}, чем могу помочь?", reply_markup=get_main_inline_keyboard())
 
 @router.message(Command("help"))
 async def help(message: Message):
